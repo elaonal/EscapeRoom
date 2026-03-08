@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureCorp Red Team Simulation</title>
+  <style>
+
+  .readonly-filed {
+    opacity: 0.8;
+    cursor: not-allowed;
+  }
+    :root{
+      --bg:#0b1220;
+      --panel:#121c31;
+      --panel-2:#0f1729;
+      --text:#ecf3ff;
+      --muted:#9fb0d0;
+      --line:rgba(255,255,255,.10);
+      --accent:#68a8ff;
+      --good:#48e6a8;
+      --bad:#ff6c8f;
+      --warn:#ffd36b;
+      --radius:18px;
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 0%, #18305f 0%, var(--bg) 48%),
+        var(--bg);
+      min-height:100vh;
+    }
+
+    a{color:var(--accent)}
+    .wrap{
+      max-width:1180px;
+      margin:0 auto;
+      padding:24px 16px 48px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .badge{
+      width:48px;height:48px;border-radius:14px;
+      display:grid;place-items:center;
+      font-weight:800;font-size:22px;
+      background:linear-gradient(135deg, rgba(104,168,255,.45), rgba(72,230,168,.22));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:28px;
+      line-height:1.05;
+    }
+
+    .brand p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .status{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .pill{
+      min-width:150px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      box-shadow:var(--shadow);
+    }
+
+    .pill span{color:var(--muted);font-size:12px}
+    .pill b{font-size:13px}
+
+    .layout{
+      display:grid;
+      grid-template-columns:1.35fr .85fr;
+      gap:16px;
+    }
+
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-hd{
+      padding:16px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .card-hd h2{
+      margin:0;
+      font-size:18px;
+    }
+
+    .sub{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:4px;
+    }
+
+    .card-bd{padding:16px}
+
+    .notice{
+      padding:14px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .notice b{color:var(--text)}
+
+    .hr{
+      height:1px;
+      background:var(--line);
+      margin:14px 0;
+    }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+      font-size:12px;
+      margin-right:8px;
+      margin-bottom:8px;
+    }
+
+    .tag.good{color:#cffff0;border-color:rgba(72,230,168,.35);background:rgba(72,230,168,.08)}
+    .tag.warn{color:#ffeab9;border-color:rgba(255,211,107,.35);background:rgba(255,211,107,.08)}
+    .tag.bad{color:#ffd8e2;border-color:rgba(255,108,143,.35);background:rgba(255,108,143,.08)}
+
+    .progress{
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line);
+      overflow:hidden;
+      min-width:240px;
+    }
+
+    .progress > div{
+      height:100%;
+      width:0%;
+      transition:width .25s ease;
+      background:linear-gradient(90deg, var(--accent), var(--good));
+    }
+
+    .stage{display:none}
+    .stage.active{display:block}
+
+    .input, .textarea{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#091121;
+      color:var(--text);
+      font-size:15px;
+      outline:none;
+    }
+
+    .textarea{min-height:120px;resize:vertical}
+
+    .small{font-size:12px;color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row > *{flex:1}
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:800;
+      color:#061120;
+      background:linear-gradient(135deg, rgba(104,168,255,.95), rgba(72,230,168,.78));
+      box-shadow:0 10px 25px rgba(104,168,255,.18);
+    }
+
+    .btn.secondary{
+      color:var(--text);
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line);
+      box-shadow:none;
+    }
+
+    .btn.danger{
+      color:#ffdce5;
+      background:rgba(255,108,143,.14);
+      border:1px solid rgba(255,108,143,.35);
+      box-shadow:none;
+    }
+
+    .feedback{
+      margin-top:10px;
+      font-size:14px;
+      min-height:20px;
+    }
+
+    .ok{color:var(--good)}
+    .bad{color:var(--bad)}
+    .warn{color:var(--warn)}
+
+    .hidden{display:none !important}
+
+    .terminal{
+      background:#060b14;
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    .term-top{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+    }
+
+    .term-body{
+      min-height:220px;
+      max-height:320px;
+      overflow:auto;
+      padding:12px;
+      white-space:pre-wrap;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:13px;
+      color:#dce9ff;
+    }
+
+    .term-input{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 12px;
+      border-top:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+
+    .term-input input{
+      flex:1;
+      background:transparent;
+      border:none;
+      color:#fff;
+      outline:none;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:13px;
+    }
+
+    .prompt{color:#7cb0ff;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+
+    .msg{
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      margin-bottom:10px;
+    }
+
+    .msg .from{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+
+    .list{
+      margin:0;
+      padding-left:18px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .db{
+      display:grid;
+      gap:10px;
+    }
+
+    .record{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      padding:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+    }
+
+    .record b{display:block}
+    .record small{color:var(--muted)}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+    th,td{
+      padding:10px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+    }
+    th{color:var(--muted);font-weight:700}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="badge">S</div>
+      <div>
+        <h1>WiCyS Escape Room</h1>
+        <p>physical puzzles + web submission portal</p>
+      </div>
+    </div>
+
+    <div class="status">
+      <div class="pill"><span>Team</span><b id="teamLabel">—</b></div>
+      <div class="pill"><span>Time left</span><b id="timeLabel">—</b></div>
+      <div class="pill"><span>Progress</span><b id="progressLabel">0/5</b></div>
+      <div class="pill"><span>Score</span><b id="scoreLabel">0</b></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <h2 id="title">Welcome</h2>
+          <div class="sub" id="subtitle">Start with the onboarding instructions.</div>
+        </div>
+        <div>
+          <div class="progress"><div id="progressBar"></div></div>
+          <div class="small" style="margin-top:8px">Solve the physical clues, then submit answers here.</div>
+        </div>
+      </div>
+
+      <div class="card-bd">
+
+        <!-- LEVEL 0 -->
+        <section class="stage active" id="s0">
+          <div class="notice">
+            <b>Scenario:</b> You are part of a red team security simulation testing a company’s system. Your goal is to see how far you can get using poor security practices — and ultimately access the admin panel to remove sensitive records. You take on the role of new recruit <b>John Smith</b>. :contentReference[oaicite:1]{index=1}
+            <div class="hr"></div>
+            <span class="tag warn">Physical clues in room</span>
+            <span class="tag good">Submit answers here</span>
+            <span class="tag">Timer + score</span>
+          </div>
+
+          <div class="hr"></div>
+
+          <label class="small">Team name</label>
+          <input class="input" id="teamInput" placeholder="e.g. Team WiCyS">
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="startBtn">Begin Simulation</button>
+            <button class="btn secondary" id="lbBtn0">Leaderboard</button>
+          </div>
+        </section>
+
+        <!-- LEVEL 1 -->
+        <section class="stage" id="s1">
+          <div class="notice">
+            <b>Level 1 – Default Credentials</b><br>
+            Read the onboarding instructions printout, scan the QR codes on the posters around the room, collect the three fragments A3, C7, H1, and use the chess printout to decode them. 
+            Then piece together the company’s weak default password.
+            <div class="hr"></div>
+            <span class="tag">Fragments: A3, C7, H1</span>
+            <span class="tag">Chess printout</span>
+            <span class="tag bad">Do not solve on screen!!!pan>
+          </div>
+
+          <div class="hr"></div>
+
+          <label class="small">Enter the default password</label>
+          <input class="input" id="l1" placeholder="default password">
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="l1Btn">Submit Level 1</button>
+            <button class="btn secondary" id="hint1">Hint</button>
+          </div>
+          <div class="feedback" id="l1Msg"></div>
+        </section>
+
+        <!-- LEVEL 2 -->
+        <section class="stage" id="s2">
+          <div class="notice">
+            <b>Level 2 – Password Policy</b><br>
+            From the onboarding printout, players find the dashboard link and implicit username <b>j.smith</b>. They log in using the weak password from Level 1, and the system forces them to create a stronger password that meets policy rules before continuing.
+          </div>
+
+          <div class="hr"></div>
+
+          <label>Username</label>
+          <input type="text" id="username" value="j.smith" readonly class="readonly-field">
+
+          <div class="hr"></div>
+
+          <label class="small">Current password (from Level 1)</label>
+          <input class="input" id="currentPassword" placeholder="current password">
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="loginBtn">Log in</button>
+          </div>
+
+          <div class="feedback" id="loginMsg"></div>
+
+          <div id="policyBox" class="hidden" style="margin-top:14px">
+            <div class="notice">
+              <b>Password policy warning</b><br>
+              Your credentials are insecure. To continue, create a stronger password that:
+              <ul class="list">
+                <li>must be at least 14 characters long</li>
+                <li>must contain at least one uppercase letter</li>
+                <li>must contain at least one lowercase letter</li>
+                <li>must contains at least one number</li>
+                <li>must contains at least one special character(e.g. ., !, _, $, %)</li>
+                <li>cannot contain the username </li>
+                <li>cannot repeat the same character or number more than twice</li>
+                <li>cannot contain common words such as "password" or "admin"</li>
+              </ul>
+            </div>
+
+            <div class="hr"></div>
+
+            <label class="small">Create new password</label>
+            <input class="input" id="newPassword" placeholder="Create a stronger password">
+            <div class="row" style="margin-top:10px">
+              <button class="btn" id="savePasswordBtn">Save & Continue</button>
+              <button class="btn secondary" id="hint2">Hint</button>
+            </div>
+            <div class="feedback" id="newPasswordMsg"></div>
+          </div>
+        </section>
+
+        <!-- LEVEL 3 -->
+        <section class="stage" id="s3">
+          <div class="notice">
+            <b>Level 3 – Hidden Admin Panel</b><br>
+            On the dashboard there is no visible admin tab. The admin-team message hints that admins can go straight to the admin page from the address bar. Players should discover the hidden page by adding <b>/admin</b>. In this portal, use the button below to simulate that step. 
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="msg">
+            <div class="from">Admin Team</div>
+            <div>Just a reminder that the admin panel isn’t listed on the dashboard menu for security reasons. Admins can still access it directly if needed. If you already have the dashboard open, the quickest way is to go straight to the admin page from the address bar.</div>
+          </div>
+
+          <div class="msg">
+            <div class="from">Mentor message thread</div>
+            <div>A colleague mentions that the admin password is often shared through an image reference, and that sometimes it helps to look a little deeper than what’s visible. This points toward the stego step used in Level 4.</div>
+          </div>
+
+          <div class="row">
+            <button class="btn" id="goAdminBtn">Open admin route</button>
+            <button class="btn secondary" id="hint3">Hint</button>
+          </div>
+        </section>
+
+        <!-- LEVEL 4 -->
+        <section class="stage" id="s4">
+          <div class="notice">
+            <b>Level 4 – Admin Password via Steganography</b><br>
+            The materials include an image that contains hidden data. The image has been encoded using steghide and no passphrase is required. Your task is to extract the hidden file <button class="btn-secondary"
+            onclick="window.open('https://surreyac-my.sharepoint.com/personal/ck00845_surrey_ac_uk/_layouts/15/download.aspx?UniqueId=e705df4b%2D8781%2D4d35%2Dba7b%2D8b8a8b8c9f8e','_blank')">
+            Download Image
+            </button> from the image. The extracted file contains the admin password needed to unlock the admin panel. Use the appropriate steganography tool to reveal the hidden content and then enter the discovered password below.
+          </div>
+
+          <div class="hr"></div>
+
+          <label class="small">Admin password</label>
+          <input class="input" id="l4" placeholder="Enter extracted admin password">
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="l4Btn">Unlock Admin</button>
+            <button class="btn secondary" id="hint4">Hint</button>
+          </div>
+          <div class="feedback" id="l4Msg"></div>
+        </section>
+
+        <!-- LEVEL 5 -->
+        <section class="stage" id="s5">
+          <div class="notice">
+            <b>Level 5 – Impact + Debrief</b><br>
+            You have admin access and can delete records, but the system asks for a confirmation password. The phrase shown is <b>flz p dhua av klslal aopz</b>. Decode it using Caesar cipher shift 7, then enter the result to delete the records.
+
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="db">
+            <div class="record">
+              <div>
+                <b>Record #A-103</b>
+                <small>Privileged account audit trail</small>
+              </div>
+              <button class="btn danger" style="max-width:150px" disabled>Delete</button>
+            </div>
+            <div class="record">
+              <div>
+                <b>Record #B-244</b>
+                <small>Archived admin reset tokens</small>
+              </div>
+              <button class="btn danger" style="max-width:150px" disabled>Delete</button>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="notice">
+            <b>CONFIRM DELETION</b><br>
+            <code>flz p dhua av klslal aopz</code>
+          </div>
+
+          <div class="hr"></div>
+
+          <label class="small">Confirmation phrase</label>
+          <input type="text" id="confirmPhrase" placeholder="Decoded confirmation phrase">
+          <div class="row" style="margin-top:10px">
+            <button onclick="checkDeletion()">Delete Records</button>
+            <div id="successMessage" style="display:none; margin-top:15px; color:#00ff9c; font-weight:bold;">
+            Records deleted successfully.<br>
+            System cleanup complete.
+            </div>
+            <button class="btn-secondary"
+
+            <button class="btn secondary" id="hint5">Hint</button>
+          </div>
+          <div class="feedback" id="l5Msg"></div>
+        </section>
+
+        <!-- DONE -->
+        <section class="stage" id="done">
+          <div class="notice">
+            <b>Simulation complete.</b><br>
+            You exploited weak default credentials, weak password policy, hidden admin routing, steganographically hidden data, and a Caesar-cipher protected confirmation step — the same vulnerability chain described in the materials. :contentReference[oaicite:8]{index=8}
+            <div class="hr"></div>
+            <span class="tag good">Final score: <span id="finalScore">0</span></span>
+            <span class="tag warn">Time used: <span id="finalTime">0:00</span></span>
+          </div>
+
+          <div class="hr"></div>
+
+          <label class="small">Optional feedback</label>
+          <textarea class="textarea" id="feedbackBox" placeholder="What did your team find most interesting?"></textarea>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn secondary" id="saveFeedbackBtn">Save Feedback Locally</button>
+            <button class="btn" id="leaderboardBtnDone">Leaderboard</button>
+            <button class="btn danger" id="resetBtn">Reset</button>
+          </div>
+          <div class="feedback" id="doneMsg"></div>
+        </section>
+
+        <!-- LEADERBOARD -->
+        <section class="stage" id="leaderboard">
+          <div class="notice">
+            <b>Leaderboard</b><br>
+            Scores are stored locally on this device.
+          </div>
+          <div class="hr"></div>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Team</th>
+                <th>Time</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody id="lbBody"></tbody>
+          </table>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="backBtn">Back</button>
+            <button class="btn danger" id="clearLbBtn">Clear Leaderboard</button>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <h2>Game Overview</h2>
+          <div class="sub">physical challenge + digital progression</div>
+        </div>
+        <span class="tag">host view</span>
+      </div>
+
+      <div class="card-bd">
+        <div class="notice">
+          <b>Structure</b><br>
+          Level 0: onboarding story<br>
+          Level 1: physical posters + chess decode<br>
+          Level 2: login + stronger password policy<br>
+          Level 3: hidden admin route<br>
+          Level 4: stego password extraction<br>
+          Level 5: Caesar cipher confirmation
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="notice">
+          <b>Physical materials expected</b><br>
+          • onboarding instructions printout<br>
+          • 3 legit posters with QR fragments<br>
+          • posters<br>
+          • chess printout<br>
+          • admin / mentor message printouts or on-screen messages<br>
+          • steg image + secret.txt workflow
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="hr"></div>
+
+        <label class="small">Timer (minutes)</label>
+        <input class="input" id="minutesInput" value="45">
+        <div class="row" style="margin-top:10px">
+          <button class="btn secondary" id="applyMinutesBtn">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const state = {
+    stage: "s0",
+    lastStage: "s0",
+    team: "",
+    score: 0,
+    minutes: 45,
+    startedAt: null,
+    endedAt: null,
+    timer: null,
+    weakPassword: "knightpawnrook",
+    strongPassword: "",
+    adminUnlocked: false
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  function norm(v){
+    return (v || "").trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function normNoSpace(v){
+    return (v || "").trim().toLowerCase().replace(/\s+/g, "");
+  }
+
+  function setScore(delta){
+    state.score = Math.max(0, state.score + delta);
+    $("scoreLabel").textContent = state.score;
+  }
+
+  function updateHeader(stage){
+    const map = {
+      s0: ["Welcome", "Start with the onboarding instructions."],
+      s1: ["Level 1", "Submit the decoded weak default password."],
+      s2: ["Level 2", "Log in and create a stronger password."],
+      s3: ["Level 3", "Discover the hidden admin panel route."],
+      s4: ["Level 4", "Unlock admin using the stego password."],
+      s5: ["Level 5", "Decode the confirmation phrase and delete records."],
+      done: ["Completed", "Simulation finished."],
+      leaderboard: ["Leaderboard", "Stored locally on this device."]
+    };
+    $("title").textContent = map[stage][0];
+    $("subtitle").textContent = map[stage][1];
+  }
+
+  function completedCount(){
+    const order = ["s0","s1","s2","s3","s4","s5","done"];
+    return Math.max(0, order.indexOf(state.stage));
+  }
+
+  function updateProgress(){
+    const c = Math.min(5, completedCount());
+    $("progressLabel").textContent = c + "/5";
+    $("progressBar").style.width = (c/5*100) + "%";
+  }
+
+  function show(stage){
+    state.lastStage = state.stage;
+    state.stage = stage;
+    document.querySelectorAll(".stage").forEach(s => s.classList.remove("active"));
+    $(stage).classList.add("active");
+    updateHeader(stage);
+    updateProgress();
+  }
+
+  function usedSeconds(){
+    if(!state.startedAt) return 0;
+    const end = state.endedAt || Date.now();
+    return Math.max(0, Math.floor((end - state.startedAt)/1000));
+  }
+
+  function fmt(sec){
+    const m = Math.floor(sec/60);
+    const s = sec % 60;
+    return m + ":" + String(s).padStart(2,"0");
+  }
+
+  function tick(){
+    if(!state.startedAt){ $("timeLabel").textContent = "—"; return; }
+    const total = state.minutes * 60;
+    const left = total - usedSeconds();
+    $("timeLabel").textContent = fmt(Math.max(0,left));
+    if(left <= 0){
+      finish(false);
+    }
+  }
+
+  function startGame(){
+    const team = $("teamInput").value.trim();
+    if(!team){
+      alert("Please enter a team name.");
+      return;
+    }
+    state.team = team;
+    $("teamLabel").textContent = team;
+    state.score = 0;
+    $("scoreLabel").textContent = "0";
+    state.startedAt = Date.now();
+    state.endedAt = null;
+    state.strongPassword = "";
+    state.adminUnlocked = false;
+
+    clearInterval(state.timer);
+    state.timer = setInterval(tick, 250);
+    tick();
+    show("s1");
+  }
+
+  function hint(level){
+    const hints = {
+      1: "Use the QR fragments and the chessboard printout in the room.",
+      2: "Use username j.smith and the Level 1 password first, then create a password that meets all listed rules.",
+      3: "The admin page is hidden. Think about what you would add to the current URL.",
+      4: "The mentor thread and image hint point to steganography. The extracted secret.txt contains the admin password.",
+      5: "Decode the phrase with Caesar cipher shift 7."
+    };
+    alert(hints[level]);
+  }
+
+  // Level 1
+  function submitL1(){
+    const answer = normNoSpace($("l1").value);
+    if(answer === "knightpawnrook"){
+      $("l1Msg").innerHTML = '<span class="ok">Correct. Weak default credentials identified.</span>';
+      setScore(50);
+      setTimeout(() => show("s2"), 500);
+    } else {
+      $("l1Msg").innerHTML = '<span class="bad">Incorrect. Use A3, C7, H1 with the chess printout.</span>';
+      setScore(-5);
+    }
+  }
+
+  // Level 2
+  function login(){
+    const u = normNoSpace($("username").value);
+    const p = normNoSpace($("currentPassword").value);
+
+    if(u !== "j.smith"){
+      $("loginMsg").innerHTML = '<span class="bad">Incorrect username.</span>';
+      setScore(-3);
+      return;
+    }
+
+    if(p !== "knightpawnrook"){
+      $("loginMsg").innerHTML = '<span class="bad">Incorrect current password. Use the Level 1 answer.</span>';
+      setScore(-5);
+      return;
+    }
+
+    $("loginMsg").innerHTML = '<span class="warn">Login successful, but these are insecure credentials. You must create a stronger password.</span>';
+    $("policyBox").classList.remove("hidden");
+    setScore(15);
+  }
+
+  function strongEnough(p){
+    return p.length >= 12 &&
+      /[A-Z]/.test(p) &&
+      /[a-z]/.test(p) &&
+      /[0-9]/.test(p) &&
+      /[^A-Za-z0-9]/.test(p);
+  }
+
+  function saveStrongPassword(){
+    const p = $("newPassword").value;
+    if(!strongEnough(p)){
+      $("newPasswordMsg").innerHTML = '<span class="bad">That password does not meet the policy.</span>';
+      setScore(-5);
+      return;
+    }
+    state.strongPassword = p;
+    $("newPasswordMsg").innerHTML = '<span class="ok">Password updated. Continue to the dashboard.</span>';
+    setScore(35);
+    setTimeout(() => show("s3"), 500);
+  }
+
+  // Level 3
+  function goAdmin(){
+    setScore(25);
+    show("s4");
+  }
+
+  // Level 4
+  function submitL4(){
+    const answer = $("l4").value.trim();
+    if(answer === "thispasswordisverysecure!!!"){
+      state.adminUnlocked = true;
+      $("l4Msg").innerHTML = '<span class="ok">Admin privileges unlocked.</span>';
+      setScore(45);
+      setTimeout(() => show("s5"), 500);
+    } else {
+      $("l4Msg").innerHTML = '<span class="bad">Incorrect admin password.</span>';
+      setScore(-6);
+    }
+  }
+
+  // Level 5
+  function submitL5(){
+    const answer = norm($("l5").value);
+    if(answer === "yes i want to delete this"){
+      $("l5Msg").innerHTML = '<span class="ok">Records deleted. Simulation complete.</span>';
+      setScore(60);
+      setTimeout(() => finish(true), 400);
+    } else {
+      $("l5Msg").innerHTML = '<span class="bad">Incorrect confirmation phrase.</span>';
+      setScore(-8);
+    }
+  }
+
+  function finish(success){
+    if(state.endedAt) return;
+    state.endedAt = Date.now();
+    clearInterval(state.timer);
+    $("finalScore").textContent = state.score;
+    $("finalTime").textContent = fmt(usedSeconds());
+
+    if(state.team){
+      const items = JSON.parse(localStorage.getItem("securecorp_lb") || "[]");
+      items.push({
+        team: state.team,
+        score: state.score,
+        time: usedSeconds()
+      });
+      localStorage.setItem("securecorp_lb", JSON.stringify(items));
+    }
+
+    if(success){
+      $("doneMsg").innerHTML = '<span class="ok">Run completed successfully.</span>';
+    } else {
+      $("doneMsg").innerHTML = '<span class="warn">Time expired.</span>';
+    }
+
+    renderLeaderboard();
+    show("done");
+  }
+
+  function renderLeaderboard(){
+    const items = JSON.parse(localStorage.getItem("securecorp_lb") || "[]")
+      .sort((a,b) => a.time - b.time || b.score - a.score);
+
+    $("lbBody").innerHTML = items.map((x,i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>${x.team}</td>
+        <td>${fmt(x.time)}</td>
+        <td>${x.score}</td>
+      </tr>
+    `).join("");
+  }
+
+  function resetAll(){
+    clearInterval(state.timer);
+    state.stage = "s0";
+    state.lastStage = "s0";
+    state.team = "";
+    state.score = 0;
+    state.startedAt = null;
+    state.endedAt = null;
+    state.strongPassword = "";
+    state.adminUnlocked = false;
+
+    $("teamInput").value = "";
+    $("teamLabel").textContent = "—";
+    $("timeLabel").textContent = "—";
+    $("scoreLabel").textContent = "0";
+
+    ["l1","currentPassword","newPassword","l4","l5","feedbackBox"].forEach(id => $(id).value = "");
+    ["l1Msg","loginMsg","newPasswordMsg","l4Msg","l5Msg","doneMsg"].forEach(id => $(id).innerHTML = "");
+    $("policyBox").classList.add("hidden");
+
+    show("s0");
+    updateProgress();
+  }
+
+  function saveFeedback(){
+    const items = JSON.parse(localStorage.getItem("securecorp_feedback") || "[]");
+    items.push({
+      team: state.team,
+      feedback: $("feedbackBox").value.trim()
+    });
+    localStorage.setItem("securecorp_feedback", JSON.stringify(items));
+    $("doneMsg").innerHTML = '<span class="ok">Feedback saved locally.</span>';
+  }
+
+  // listeners
+  $("startBtn").onclick = startGame;
+  $("lbBtn0").onclick = () => { renderLeaderboard(); show("leaderboard"); };
+  $("leaderboardBtnDone").onclick = () => { renderLeaderboard(); show("leaderboard"); };
+  $("backBtn").onclick = () => show(state.lastStage === "leaderboard" ? "done" : state.lastStage);
+  $("clearLbBtn").onclick = () => {
+    if(confirm("Clear leaderboard on this device?")){
+      localStorage.removeItem("securecorp_lb");
+      renderLeaderboard();
+    }
+  };
+
+  $("l1Btn").onclick = submitL1;
+  $("hint1").onclick = () => hint(1);
+
+  $("loginBtn").onclick = login;
+  $("savePasswordBtn").onclick = saveStrongPassword;
+  $("hint2").onclick = () => hint(2);
+
+  $("goAdminBtn").onclick = goAdmin;
+  $("hint3").onclick = () => hint(3);
+
+  $("l4Btn").onclick = submitL4;
+  $("hint4").onclick = () => hint(4);
+
+  $("l5Btn").onclick = submitL5;
+  $("hint5").onclick = () => hint(5);
+
+  $("resetBtn").onclick = resetAll;
+  $("saveFeedbackBtn").onclick = saveFeedback;
+
+  $("applyMinutesBtn").onclick = () => {
+    const m = Number($("minutesInput").value);
+    if(!m || m < 1 || m > 180){
+      alert("Enter a valid number between 1 and 180.");
+      return;
+    }
+    state.minutes = Math.floor(m);
+    tick();
+  };
+
+  // Enter support
+  ["teamInput","l1","currentPassword","newPassword","l4","l5"].forEach(id => {
+    $(id).addEventListener("keydown", (e) => {
+      if(e.key !== "Enter") return;
+      if(id === "teamInput") startGame();
+      if(id === "l1") submitL1();
+      if(id === "currentPassword") login();
+      if(id === "newPassword") saveStrongPassword();
+      if(id === "l4") submitL4();
+      if(id === "l5") submitL5();
+    });
+  });
+
+  renderLeaderboard();
+  updateProgress();
+  tick();
+</script>
+</body>
+</html>
+<script>
+function checkDeletion() {
+
+    const input = document.getElementById("confirmPhrase").value.toLowerCase();
+    const correct = "yes i want to delete this";
+
+    if (input === correct) {
+        document.getElementById("successMessage").style.display = "block";
+    } 
+    else {
+        alert("Incorrect confirmation phrase.");
+    }
+
+}
+</script>
